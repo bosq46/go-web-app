@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"strings"
@@ -30,8 +31,33 @@ func showParams(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func hello(w http.ResponseWriter, r *http.Request) {
+	tmp, template_err := template.ParseFiles("../templates/sample.html")
+	if template_err != nil {
+		log.Fatal(template_err)
+		panic(template_err)
+	}
+
+	item := struct {
+		Title   string
+		Message string
+		Items   []string
+	}{
+		Title:   "sample page",
+		Message: "this is sample. <br>",
+		Items:   []string{"one", "two", "tree"},
+	}
+
+	execute_err := tmp.Execute(w, item)
+	if execute_err != nil {
+		log.Fatal(execute_err)
+	}
+}
+
 func main() {
 	http.HandleFunc("/", showParams)
+	http.HandleFunc("/hello", hello)
+
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)

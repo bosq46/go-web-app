@@ -54,9 +54,36 @@ func hello(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func post(w http.ResponseWriter, r *http.Request) {
+	template, template_err := template.ParseFiles("../templates/post.html")
+	if template_err != nil {
+		log.Fatal(template_err)
+		panic(template_err)
+	}
+
+	msg := "Please Input."
+	if r.Method == "POST" {
+		name := r.PostFormValue("name")
+		password := r.PostFormValue("password")
+		msg = name + "" + password
+	}
+	item := struct {
+		Title   string
+		Message string
+	}{
+		Title:   "Send values",
+		Message: msg,
+	}
+
+	err := template.Execute(w, item)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 func main() {
-	http.HandleFunc("/", showParams)
+	http.HandleFunc("/params", showParams)
 	http.HandleFunc("/hello", hello)
+	http.HandleFunc("/post", post)
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {

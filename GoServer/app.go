@@ -6,7 +6,11 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/gorilla/sessions"
 )
+
+var cs *sessions.CookieStore = sessions.NewCookieStore([]byte("secret-key-12345"))
 
 func showParams(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
@@ -80,10 +84,49 @@ func post(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 }
+
+func login(w http.ResponseWriter, r *http.Request) {
+	template, template_err := template.ParseFiles("../templates/login.html")
+	if template_err != nil {
+		log.Fatal(template_err)
+		panic(template_err)
+	}
+	ses, _ := cs.Get(r, "sample-session")
+
+	if r.Method == "POST" {
+		ses.Values["login"] = nil
+		ses.Values["name"] = nil
+		nm := r.PostFormValue("name")
+		pw := r.PostFormValue("password")
+		if nm == pw {
+			ses.Values["login"] = true
+			ses.Values["name"] = nm
+		}
+		ses.Save(r, w)
+	}
+	isLogin, _ := ses.Values["login"].(bool)
+	name, _ := ses.Values["name"].(string)
+	msg := "no login"
+	if isLogin {
+		msg = "login: " + name
+	}
+	item := struct {
+		Title   string
+		Message string
+	}{
+		Title:   "Session",
+		Message: msg,
+	}
+	err := template.Execute(w, item)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 func main() {
 	http.HandleFunc("/params", showParams)
 	http.HandleFunc("/hello", hello)
 	http.HandleFunc("/post", post)
+	http.HandleFunc("/login", login)
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {

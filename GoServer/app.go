@@ -86,7 +86,11 @@ func post(w http.ResponseWriter, r *http.Request) {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
-	template, template_err := template.ParseFiles("../templates/login.html")
+	template, template_err := template.ParseFiles(
+		"../templates/login.html",
+		"../templates/header.html",
+		"../templates/footer.html",
+	)
 	if template_err != nil {
 		log.Fatal(template_err)
 		panic(template_err)
@@ -113,9 +117,11 @@ func login(w http.ResponseWriter, r *http.Request) {
 	item := struct {
 		Title   string
 		Message string
+		Account string
 	}{
 		Title:   "Session",
 		Message: msg,
+		Account: name,
 	}
 	err := template.Execute(w, item)
 	if err != nil {

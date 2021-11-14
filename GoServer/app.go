@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"strings"
 
 	"forest.work/m/domain"
 
@@ -13,100 +12,29 @@ import (
 	_ "gorm.io/driver/sqlite"
 )
 
-var sesKey = "go-server-app-session-key"
+const sesKey = "go-server-app-session-key"
+const sesLoginKey = "go-server-app-session-key-login"
+const templateDir = "templates/"
+
 var cs *sessions.CookieStore = sessions.NewCookieStore([]byte(sesKey))
 
-func showParams(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
-	fmt.Printf("r.Form: %s\n", r.Form)
-	fmt.Fprintf(w, "r.Form: %s\n", r.Form)
-
-	fmt.Printf("r.URL.Path: %s\n", r.URL.Path)
-	fmt.Fprintf(w, "r.URL.Path: %s\n", r.URL.Path)
-
-	fmt.Printf("r.URL.Scheme: %s\n", r.URL.Scheme)
-	fmt.Fprintf(w, "r.URL.Scheme: %s\n", r.URL.Scheme)
-
-	fmt.Printf("r.Form[\"url_long\"]: %s\n", r.Form["url_long"])
-	fmt.Fprintf(w, "r.Form[\"url_long\"]: %s\n", r.Form["url_long"])
-
-	for k, v := range r.Form {
-		fmt.Println("key:", k)
-		fmt.Fprintf(w, "key:%s\n", k)
-		fmt.Println("val:", v)
-		fmt.Fprintf(w, "val:%s\n", strings.Join(v, ""))
-	}
-}
-
-func hello(w http.ResponseWriter, r *http.Request) {
-	tmp, template_err := template.ParseFiles("../templates/sample.html")
-	if template_err != nil {
-		log.Fatal(template_err)
-		panic(template_err)
-	}
-
-	item := struct {
-		Title   string
-		Message string
-		Items   []string
-	}{
-		Title:   "sample page",
-		Message: "this is sample. <br>",
-		Items:   []string{"one", "two", "tree"},
-	}
-
-	err := tmp.Execute(w, item)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func post(w http.ResponseWriter, r *http.Request) {
-	template, err := template.ParseFiles("../templates/post.html")
-	if err != nil {
-		log.Fatal(err)
-		panic(err)
-	}
-
-	msg := "Please Input."
-	if r.Method == "POST" {
-		name := r.PostFormValue("name")
-		password := r.PostFormValue("password")
-		msg = "name:" + name + " pass:" + password
-	}
-	item := struct {
-		Title   string
-		Message string
-	}{
-		Title:   "Send values",
-		Message: msg,
-	}
-
-	err = template.Execute(w, item)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func notemp() *template.Template {
+func NoTemplate() *template.Template {
 	src := "<html><body><h1>NO TEMPLATE.</h1></body></html>"
 	tmp, _ := template.New("index").Parse(src)
 	return tmp
 }
 
-func login(w http.ResponseWriter, r *http.Request) {
+func Login(w http.ResponseWriter, r *http.Request) {
 	template, err := template.ParseFiles(
-		"../templates/login.html",
-		"../templates/header.html",
-		"../templates/footer.html",
+		templateDir+"login.html",
+		templateDir+"header.html",
+		templateDir+"footer.html",
 	)
 	if err != nil {
-		log.Fatal(err)
-		// panic(err)
-		template = notemp()
+		fmt.Println("Can no find template file.")
+		template = NoTemplate()
 	}
-	ses, _ := cs.Get(r, "sample-session")
+	ses, _ := cs.Get(r, sesLoginKey)
 
 	if r.Method == "POST" {
 		ses.Values["login"] = nil
@@ -129,10 +57,12 @@ func login(w http.ResponseWriter, r *http.Request) {
 		Title   string
 		Message string
 		Account string
+		PostURL string
 	}{
 		Title:   "Session",
 		Message: msg,
 		Account: name,
+		PostURL: "test/post",
 	}
 	err = template.Execute(w, item)
 	if err != nil {
@@ -142,10 +72,10 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	domain.Migrate()
-	http.HandleFunc("/params", showParams)
-	http.HandleFunc("/hello", hello)
-	http.HandleFunc("/post", post)
-	http.HandleFunc("/login", login)
+	http.HandleFunc("/test/params", ShowParams)
+	http.HandleFunc("/test/hello", Hello)
+	http.HandleFunc("/test/post", Post)
+	http.HandleFunc("/login", Login)
 
 	port := ":8080"
 	fmt.Println("Running on http://127.0.0.1" + port + "/ (Press CTRL+C to quit)")

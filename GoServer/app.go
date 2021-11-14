@@ -7,10 +7,14 @@ import (
 	"net/http"
 	"strings"
 
+	"forest.work/m/domain"
+
 	"github.com/gorilla/sessions"
+	_ "gorm.io/driver/sqlite"
 )
 
-var cs *sessions.CookieStore = sessions.NewCookieStore([]byte("secret-key-12345"))
+var sesKey = "go-server-app-session-key"
+var cs *sessions.CookieStore = sessions.NewCookieStore([]byte(sesKey))
 
 func showParams(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
@@ -52,24 +56,24 @@ func hello(w http.ResponseWriter, r *http.Request) {
 		Items:   []string{"one", "two", "tree"},
 	}
 
-	execute_err := tmp.Execute(w, item)
-	if execute_err != nil {
-		log.Fatal(execute_err)
+	err := tmp.Execute(w, item)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
 func post(w http.ResponseWriter, r *http.Request) {
-	template, template_err := template.ParseFiles("../templates/post.html")
-	if template_err != nil {
-		log.Fatal(template_err)
-		panic(template_err)
+	template, err := template.ParseFiles("../templates/post.html")
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
 	}
 
 	msg := "Please Input."
 	if r.Method == "POST" {
 		name := r.PostFormValue("name")
 		password := r.PostFormValue("password")
-		msg = name + "" + password
+		msg = "name:" + name + " pass:" + password
 	}
 	item := struct {
 		Title   string
@@ -79,21 +83,28 @@ func post(w http.ResponseWriter, r *http.Request) {
 		Message: msg,
 	}
 
-	err := template.Execute(w, item)
+	err = template.Execute(w, item)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
+func notemp() *template.Template {
+	src := "<html><body><h1>NO TEMPLATE.</h1></body></html>"
+	tmp, _ := template.New("index").Parse(src)
+	return tmp
+}
+
 func login(w http.ResponseWriter, r *http.Request) {
-	template, template_err := template.ParseFiles(
+	template, err := template.ParseFiles(
 		"../templates/login.html",
 		"../templates/header.html",
 		"../templates/footer.html",
 	)
-	if template_err != nil {
-		log.Fatal(template_err)
-		panic(template_err)
+	if err != nil {
+		log.Fatal(err)
+		// panic(err)
+		template = notemp()
 	}
 	ses, _ := cs.Get(r, "sample-session")
 
@@ -112,7 +123,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	name, _ := ses.Values["name"].(string)
 	msg := "no login"
 	if isLogin {
-		msg = "login: " + name
+		msg = "login as " + name
 	}
 	item := struct {
 		Title   string
@@ -123,18 +134,22 @@ func login(w http.ResponseWriter, r *http.Request) {
 		Message: msg,
 		Account: name,
 	}
-	err := template.Execute(w, item)
+	err = template.Execute(w, item)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
+
 func main() {
+	domain.Migrate()
 	http.HandleFunc("/params", showParams)
 	http.HandleFunc("/hello", hello)
 	http.HandleFunc("/post", post)
 	http.HandleFunc("/login", login)
 
-	err := http.ListenAndServe(":8080", nil)
+	port := ":8080"
+	fmt.Println("Running on http://127.0.0.1" + port + "/ (Press CTRL+C to quit)")
+	err := http.ListenAndServe(port, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}

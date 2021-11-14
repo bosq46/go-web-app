@@ -16,3 +16,6 @@
 
 .tool-versions
 pkg/
+
+.vscode/
+*.sqlite3

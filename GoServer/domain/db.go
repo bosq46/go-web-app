@@ -3,6 +3,7 @@ package domain
 import (
 	"fmt"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -24,8 +25,7 @@ func CreateUser(name string, password string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	db.Create(&User{Name: name, Password: password})
+	db.Create(&User{Name: name, Password: generatePassword(password)})
 }
 
 func ListUser() []User {
@@ -39,13 +39,22 @@ func ListUser() []User {
 	return users
 }
 
-func findUser(name string) User {
+func FindUser(name string, password string) User {
 	db, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	var user User
-	db.First(&user, "name = ?", name)
+	db.Where("name = ? AND password = ?", name, generatePassword(password)).Find(&user)
 	return user
+}
+
+func generatePassword(pass string) []byte {
+	// 2^12 = 4096ビットでハッシュ作成
+	hash, err := bcrypt.GenerateFromPassword([]byte(pass), 12)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return hash
 }

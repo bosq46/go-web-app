@@ -14,7 +14,7 @@ import (
 
 const sesKey = "go-server-app-session-key"
 const sesLoginKey = "go-server-app-session-key-login"
-const templateDir = "templates/"
+const templateDir = "templates/user/"
 const port = ":8080"
 
 var cs *sessions.CookieStore = sessions.NewCookieStore([]byte(sesKey))
@@ -37,6 +37,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ses, _ := cs.Get(r, sesLoginKey)
+	msg := ""
 	if r.Method == "POST" {
 		ses.Values["login"] = nil
 		ses.Values["name"] = nil
@@ -51,14 +52,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				ses.Values["name"] = nm
 			}
 			ses.Save(r, w)
-
+			http.Redirect(w, r, "users", http.StatusFound)
 		} else {
 			fmt.Println("login failed.")
+			msg = "パスワードが異なります．"
 		}
 	}
 	isLogin, _ := ses.Values["login"].(bool)
 	name, _ := ses.Values["name"].(string)
-	msg := "no login"
 	if isLogin {
 		msg = "login as " + name
 	}

@@ -19,68 +19,28 @@ const port = ":8080"
 
 var cs *sessions.CookieStore = sessions.NewCookieStore([]byte(sesKey))
 
-func NoTemplate() *template.Template {
+func noTemplate() *template.Template {
 	src := "<html><body><h1>NO TEMPLATE.</h1></body></html>"
 	tmp, _ := template.New("index").Parse(src)
 	return tmp
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {
-	template, err := template.ParseFiles(
-		templateDir+"login.html",
-		templateDir+"header.html",
-		templateDir+"footer.html",
-	)
-	if err != nil {
-		fmt.Println("Can no find template file.")
-		template = NoTemplate()
-	}
-
+func setLogin(r *http.Request, w http.ResponseWriter, login bool, name string) {
 	ses, _ := cs.Get(r, sesLoginKey)
-	msg := ""
-	if r.Method == "POST" {
-		ses.Values["login"] = nil
-		ses.Values["name"] = nil
-		nm := r.PostFormValue("name")
-		pw := r.PostFormValue("password")
-		// TODO: 毒抜き
-		//reflect.ValueOf(user).IsNil()
-		if domain.LoginUser(nm, pw) {
-			fmt.Println("login success.")
-			if nm == pw {
-				ses.Values["login"] = true
-				ses.Values["name"] = nm
-			}
-			ses.Save(r, w)
-			http.Redirect(w, r, "home", http.StatusFound)
-		} else {
-			fmt.Println("login failed.")
-			msg = "パスワードが異なります．"
-		}
-	}
-	isLogin, _ := ses.Values["login"].(bool)
-	name, _ := ses.Values["name"].(string)
-	if isLogin {
-		msg = "login as " + name
-	}
-	item := struct {
-		Title   string
-		Message string
-		Account string
-		PostURL string
-	}{
-		Title:   "Session",
-		Message: msg,
-		Account: name,
-		PostURL: "test/post",
-	}
-	err = template.Execute(w, item)
-	if err != nil {
-		log.Fatal(err)
-	}
+	ses.Values["login"] = login
+	ses.Values["name"] = name
+	ses.Save(r, w)
 }
 
-func Logout(w http.ResponseWriter, r *http.Request) {
+func getLogin(r *http.Request) (string, bool) {
+	ses, _ := cs.Get(r, sesLoginKey)
+	login, exist := ses.Values["login"]
+	name := ses.Values["name"]
+	if !exist {
+		ses.Values["login"] = false
+		ses.Values["name"] = ""
+	}
+	return name.(string), login.(bool)
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
@@ -91,14 +51,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		fmt.Println("Can no find template file.")
-		template = NoTemplate()
+		template = noTemplate()
 	}
 
-	ses, _ := cs.Get(r, sesLoginKey)
 	msg := ""
 	if r.Method == "POST" {
-		ses.Values["login"] = nil
-		ses.Values["name"] = nil
 		name := r.PostFormValue("name")
 		password := r.PostFormValue("password")
 		// TODO: 毒抜き
@@ -107,9 +64,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		result, err := domain.RegisterUser(name, password)
 		// save DB
 		if result && err != nil {
-			ses.Values["login"] = true
-			ses.Values["name"] = name
-			ses.Save(r, w)
+			setLogin(r, w, true, name)
 			http.Redirect(w, r, "home", http.StatusFound)
 		} else {
 			msg = "登録に失敗:" + err.Error()
@@ -133,6 +88,64 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func Login(w http.ResponseWriter, r *http.Request) {
+	template, err := template.ParseFiles(
+		templateDir+"login.html",
+		templateDir+"header.html",
+		templateDir+"footer.html",
+	)
+	if err != nil {
+		fmt.Println("Can no find template file.")
+		template = noTemplate()
+	}
+
+	name, isLogin := getLogin(r)
+	msg := ""
+	// ログイン済みの場合
+	if isLogin {
+		msg = "login as " + name
+		http.Redirect(w, r, "home", http.StatusFound)
+	}
+
+	// ログイン情報の受付
+	if r.Method == "POST" {
+		name := r.PostFormValue("name")
+		password := r.PostFormValue("password")
+		// TODO: 毒抜き
+		//reflect.ValueOf(user).IsNil()
+		if domain.LoginUser(name, password) {
+			fmt.Println("login success.")
+			setLogin(r, w, true, name)
+			http.Redirect(w, r, "home", http.StatusFound)
+		} else {
+			fmt.Println("login failed.")
+			msg = "パスワードが異なります．"
+		}
+	}
+
+	// ログインフォームの表示
+	item := struct {
+		Title   string
+		Message string
+		Account string
+		PostURL string
+	}{
+		Title:   "Session",
+		Message: msg,
+		Account: name,
+		PostURL: "test/post",
+	}
+	err = template.Execute(w, item)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func Logout(w http.ResponseWriter, r *http.Request) {
+	setLogin(r, w, false, "")
+	http.Redirect(w, r, "login", http.StatusFound)
+}
+
 func UserList(w http.ResponseWriter, r *http.Request) {
 	template, err := template.ParseFiles(
 		templateDir+"users.html",
@@ -141,25 +154,13 @@ func UserList(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		fmt.Println("Can no find template file.")
-		template = NoTemplate()
+		template = noTemplate()
 	}
 
-	ses, _ := cs.Get(r, sesLoginKey)
-	if r.Method == "POST" {
-		ses.Values["login"] = nil
-		ses.Values["name"] = nil
-		nm := r.PostFormValue("name")
-		pw := r.PostFormValue("password")
-
-		// save DB
-		domain.CreateUser(nm, pw)
-		// save DB
-		if nm == pw {
-			ses.Values["login"] = true
-			ses.Values["name"] = nm
-		}
-		ses.Save(r, w)
-		http.Redirect(w, r, "home", http.StatusFound)
+	_, isLogin := getLogin(r)
+	// ログイン済みの場合
+	if !isLogin {
+		http.Redirect(w, r, "login", http.StatusFound)
 	}
 
 	var userNames []string

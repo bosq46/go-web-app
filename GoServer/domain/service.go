@@ -17,7 +17,9 @@ func LoginUser(name string, pass string) bool {
 }
 
 func RegisterUser(name, password string) (bool, error) {
-	if _, err := FindUser(name); err != nil {
+	user, err := FindUser(name)
+	fmt.Println("Registered = name:" + user.Name + " pass: " + string(user.Password))
+	if err != nil {
 		return false, err
 	}
 	CreateUser(name, password)

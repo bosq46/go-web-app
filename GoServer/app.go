@@ -35,18 +35,26 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Can no find template file.")
 		template = NoTemplate()
 	}
-	ses, _ := cs.Get(r, sesLoginKey)
 
+	ses, _ := cs.Get(r, sesLoginKey)
 	if r.Method == "POST" {
 		ses.Values["login"] = nil
 		ses.Values["name"] = nil
 		nm := r.PostFormValue("name")
 		pw := r.PostFormValue("password")
-		if nm == pw {
-			ses.Values["login"] = true
-			ses.Values["name"] = nm
+		// TODO: 毒抜き
+		//reflect.ValueOf(user).IsNil()
+		if domain.LoginUser(nm, pw) {
+			fmt.Println("login success.")
+			if nm == pw {
+				ses.Values["login"] = true
+				ses.Values["name"] = nm
+			}
+			ses.Save(r, w)
+
+		} else {
+			fmt.Println("login failed.")
 		}
-		ses.Save(r, w)
 	}
 	isLogin, _ := ses.Values["login"].(bool)
 	name, _ := ses.Values["name"].(string)
@@ -179,6 +187,7 @@ func main() {
 	http.HandleFunc("/logout", Logout)
 	http.HandleFunc("/new", NewUser)
 	http.HandleFunc("/users", UserList)
+	http.HandleFunc("/", NewUser)
 
 	fmt.Println("Running on http://127.0.0.1" + port + "/ (Press CTRL+C to quit)")
 	err := http.ListenAndServe(port, nil)

@@ -16,6 +16,14 @@ func LoginUser(name string, pass string) bool {
 	return err == nil
 }
 
+func RegisterUser(name, password string) (bool, error) {
+	if _, err := FindUser(name); err != nil {
+		return false, err
+	}
+	CreateUser(name, password)
+	return true, nil
+}
+
 func generatePassword(pass string) []byte {
 	// 2^12 = 4096ビットでハッシュ作成
 	hash, err := bcrypt.GenerateFromPassword([]byte(pass), 12)

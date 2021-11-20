@@ -52,7 +52,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				ses.Values["name"] = nm
 			}
 			ses.Save(r, w)
-			http.Redirect(w, r, "users", http.StatusFound)
+			http.Redirect(w, r, "home", http.StatusFound)
 		} else {
 			fmt.Println("login failed.")
 			msg = "パスワードが異なります．"
@@ -83,7 +83,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
-func NewUser(w http.ResponseWriter, r *http.Request) {
+func Register(w http.ResponseWriter, r *http.Request) {
 	template, err := template.ParseFiles(
 		templateDir+"new.html",
 		templateDir+"header.html",
@@ -95,31 +95,37 @@ func NewUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ses, _ := cs.Get(r, sesLoginKey)
+	msg := ""
 	if r.Method == "POST" {
 		ses.Values["login"] = nil
 		ses.Values["name"] = nil
-		nm := r.PostFormValue("name")
-		pw := r.PostFormValue("password")
+		name := r.PostFormValue("name")
+		password := r.PostFormValue("password")
+		// TODO: 毒抜き
 
 		// save DB
-		domain.CreateUser(nm, pw)
+		result, err := domain.RegisterUser(name, password)
 		// save DB
-		if nm == pw {
+		if result && err != nil {
 			ses.Values["login"] = true
-			ses.Values["name"] = nm
+			ses.Values["name"] = name
+			ses.Save(r, w)
+			http.Redirect(w, r, "home", http.StatusFound)
+		} else {
+			msg = "登録に失敗:" + err.Error()
 		}
-		ses.Save(r, w)
-		http.Redirect(w, r, "users", http.StatusFound)
 	}
 
 	item := struct {
-		Title   string
-		Message string
-		PostURL string
+		Title           string
+		Message         string
+		PostURL         string
+		ResponseMessage string
 	}{
-		Title:   "新規ユーザ作成",
-		Message: "ユーザ名とパスワードを入力してください",
-		PostURL: "new",
+		Title:           "新規ユーザ作成",
+		Message:         "ユーザ名とパスワードを入力してください",
+		PostURL:         "new",
+		ResponseMessage: msg,
 	}
 	err = template.Execute(w, item)
 	if err != nil {
@@ -153,7 +159,7 @@ func UserList(w http.ResponseWriter, r *http.Request) {
 			ses.Values["name"] = nm
 		}
 		ses.Save(r, w)
-		http.Redirect(w, r, "users", http.StatusFound)
+		http.Redirect(w, r, "home", http.StatusFound)
 	}
 
 	var userNames []string
@@ -186,9 +192,9 @@ func main() {
 	// User Login Page
 	http.HandleFunc("/login", Login)
 	http.HandleFunc("/logout", Logout)
-	http.HandleFunc("/new", NewUser)
-	http.HandleFunc("/users", UserList)
-	http.HandleFunc("/", NewUser)
+	http.HandleFunc("/register", Register)
+	http.HandleFunc("/home", UserList)
+	http.HandleFunc("/", UserList)
 
 	fmt.Println("Running on http://127.0.0.1" + port + "/ (Press CTRL+C to quit)")
 	err := http.ListenAndServe(port, nil)

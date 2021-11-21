@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 
 	"forest.work/m/domain"
 
@@ -45,7 +46,7 @@ func getLogin(r *http.Request) (string, bool) {
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	template, err := template.ParseFiles(
-		templateDir+"new.html",
+		templateDir+"register.html",
 		templateDir+"header.html",
 		templateDir+"footer.html",
 	)
@@ -62,8 +63,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 		// save DB
 		result, err := domain.RegisterUser(name, password)
+		fmt.Printf("result %s\n", strconv.FormatBool(result))
+		fmt.Printf("err %s\n", err)
 		// save DB
-		if result && err != nil {
+		if result && err == nil {
 			setLogin(r, w, true, name)
 			http.Redirect(w, r, "home", http.StatusFound)
 		} else {
@@ -79,7 +82,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}{
 		Title:           "新規ユーザ作成",
 		Message:         "ユーザ名とパスワードを入力してください",
-		PostURL:         "new",
+		PostURL:         "register",
 		ResponseMessage: msg,
 	}
 	err = template.Execute(w, item)

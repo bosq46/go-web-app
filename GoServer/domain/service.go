@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
@@ -19,8 +20,10 @@ func LoginUser(name string, pass string) bool {
 func RegisterUser(name, password string) (bool, error) {
 	user, err := FindUser(name)
 	fmt.Println("Registered = name:" + user.Name + " pass: " + string(user.Password))
-	if err != nil {
-		return false, err
+
+	// nil はすでに登録済みを表すのでエラーを返す
+	if err == nil {
+		return false, errors.New("the name is already registered")
 	}
 	CreateUser(name, password)
 	return true, nil

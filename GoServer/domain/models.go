@@ -6,6 +6,6 @@ import (
 
 type User struct {
 	gorm.Model
-	Name     string
-	Password []byte
+	Name     string `gorm:"unique;not null"`
+	Password []byte `gorm:"not null"`
 }

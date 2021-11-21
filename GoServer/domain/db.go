@@ -50,8 +50,5 @@ func FindUser(name string) (User, error) {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return user, err
 	}
-	fmt.Println("save ok.")
-	// db.Where("name = ? AND password = ?", name, password).Find(&user)
 	return user, nil
-
 }

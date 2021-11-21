@@ -21,6 +21,7 @@ func RegisterUser(name, password string) (bool, error) {
 	user, err := FindUser(name)
 	fmt.Println("Registered = name:" + user.Name + " pass: " + string(user.Password))
 
+	// TODO: Validation
 	// nil はすでに登録済みを表すのでエラーを返す
 	if err == nil {
 		return false, errors.New("the name is already registered")

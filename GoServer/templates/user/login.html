@@ -1,20 +1,15 @@
-<!DOCTYPE html>
 {{template "header" .}}
-<h1 class="display-4 mb-4">contents</h1>
-
-<p>{{.Message}}</p>
-
-<form action="/login" method="post">
+<form action={{.PostURL}} method="post">
     <div class="form-group">
         <label for="name">Name</label>
-        <input type="text" class="form-control" id="name" name="name">
+        <input type="text" class="form-control" id="name" name="name" autocomplete="username">
     </div>
     <div class="form-group">
         <label for="password">Password</label>
-        <input type="password" class="form-control" id="password" name="password">
+        <input type="password" class="form-control" id="password" name="password" autocomplete="current-password">
     </div>
     <button type="submit" class="btn btn-primary">
-        Click
+        Login
     </button>
 </form>
 {{template "footer" .}}

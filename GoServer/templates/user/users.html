@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 {{template "header" .}}
-<h1 class="display-4 mb-4">contents</h1>
-
-<p>{{.Message}}</p>
 
 <ul class="list-group">
 {{ range $index, $element := .UserNames}}
 <li class="list-group-item">{{$index}}: {{$element}}</li>
 {{ end }}
+</ul>
 
 {{template "footer" .}}

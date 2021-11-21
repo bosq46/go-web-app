@@ -76,12 +76,10 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	item := struct {
 		Title           string
-		Message         string
 		PostURL         string
 		ResponseMessage string
 	}{
-		Title:           "新規ユーザ作成",
-		Message:         "ユーザ名とパスワードを入力してください",
+		Title:           "新規ユーザ作成ページ",
 		PostURL:         "register",
 		ResponseMessage: msg,
 	}
@@ -106,7 +104,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	msg := ""
 	// ログイン済みの場合
 	if isLogin {
-		msg = "login as " + name
+		msg = "ログイン済み: " + name
 		http.Redirect(w, r, "home", http.StatusFound)
 	}
 
@@ -122,21 +120,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "home", http.StatusFound)
 		} else {
 			fmt.Println("login failed.")
-			msg = "パスワードが異なります．"
+			msg = "パスワードが異なります"
 		}
 	}
 
 	// ログインフォームの表示
 	item := struct {
-		Title   string
-		Message string
-		Account string
-		PostURL string
+		Title           string
+		PostURL         string
+		ResponseMessage string
 	}{
-		Title:   "Session",
-		Message: msg,
-		Account: name,
-		PostURL: "test/post",
+		Title:           "ログインフォーム",
+		PostURL:         "login",
+		ResponseMessage: msg,
 	}
 	err = template.Execute(w, item)
 	if err != nil {
@@ -173,11 +169,9 @@ func UserList(w http.ResponseWriter, r *http.Request) {
 	}
 	item := struct {
 		Title     string
-		Message   string
 		UserNames []string
 	}{
-		Title:     "My Home",
-		Message:   "ユーザの編集が可能です",
+		Title:     "ホーム画面",
 		UserNames: userNames,
 	}
 	err = template.Execute(w, item)

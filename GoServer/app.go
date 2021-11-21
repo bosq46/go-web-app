@@ -33,13 +33,15 @@ func setLogin(r *http.Request, w http.ResponseWriter, login bool, name string) {
 	ses.Save(r, w)
 }
 
-func getLogin(r *http.Request) (string, bool) {
+func getLogin(r *http.Request, w http.ResponseWriter) (string, bool) {
 	ses, _ := cs.Get(r, sesLoginKey)
 	login, exist := ses.Values["login"]
 	name := ses.Values["name"]
 	if !exist {
 		ses.Values["login"] = false
 		ses.Values["name"] = ""
+		ses.Save(r, w)
+		return "", false
 	}
 	return name.(string), login.(bool)
 }
@@ -100,7 +102,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		template = noTemplate()
 	}
 
-	name, isLogin := getLogin(r)
+	name, isLogin := getLogin(r, w)
 	msg := ""
 	// ログイン済みの場合
 	if isLogin {
@@ -156,7 +158,7 @@ func UserList(w http.ResponseWriter, r *http.Request) {
 		template = noTemplate()
 	}
 
-	_, isLogin := getLogin(r)
+	_, isLogin := getLogin(r, w)
 	// ログイン済みの場合
 	if !isLogin {
 		http.Redirect(w, r, "login", http.StatusFound)

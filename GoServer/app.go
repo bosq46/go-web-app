@@ -183,6 +183,55 @@ func UserList(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func UserEdit(w http.ResponseWriter, r *http.Request) {
+	template, err := template.ParseFiles(
+		templateDir+"edit.html",
+		templateDir+"header.html",
+		templateDir+"footer.html",
+	)
+	if err != nil {
+		fmt.Println("Can no find template file.")
+		template = noTemplate()
+	}
+
+	_, isLogin := getLogin(r, w)
+	// ログインしていない場合
+	if !isLogin {
+		http.Redirect(w, r, "login", http.StatusFound)
+	}
+
+	// 編集の受付
+	fmt.Println(r.Method)
+	if r.Method == "POST" {
+		method := r.PostFormValue("method")
+		if method == "delete" {
+			targetID := r.PostFormValue("id")
+			fmt.Println("Delete ->" + targetID)
+		} else if method == "put" {
+			targetID := r.PostFormValue("id")
+			targetName := r.PostFormValue("name")
+			targetPassword := r.PostFormValue("password")
+			fmt.Printf("Update -> %s / %s / %s\n", targetID, targetName, targetPassword)
+		}
+		http.Redirect(w, r, "/", http.StatusFound)
+	}
+
+	userID := r.FormValue("user")
+	fmt.Println("userId" + userID)
+
+	item := struct {
+		Title  string
+		UserID string
+	}{
+		Title:  "ユーザ編集",
+		UserID: userID,
+	}
+	err = template.Execute(w, item)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func main() {
 	domain.Migrate()
 	// Test Page
@@ -193,9 +242,8 @@ func main() {
 	http.HandleFunc("/login", Login)
 	http.HandleFunc("/logout", Logout)
 	http.HandleFunc("/register", Register)
-	http.HandleFunc("/home", UserList)
+	http.HandleFunc("/edit", UserEdit)
 	http.HandleFunc("/", UserList)
-
 	fmt.Println("Running on http://127.0.0.1" + port + "/ (Press CTRL+C to quit)")
 	err := http.ListenAndServe(port, nil)
 	if err != nil {

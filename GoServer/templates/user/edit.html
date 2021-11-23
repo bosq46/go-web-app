@@ -1,0 +1,36 @@
+{{template "header" .}}
+<div class="container p-3">
+    <a href="/" class="btn btn-primary btn-secondary">BACK</a>
+</div>
+
+<div class="container p-2 bg-light">
+    <form action="edit" method="post">
+        <input type="hidden" name="_method" value="put">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" id="name" name="name" autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" class="form-control" id="password" name="password" autocomplete="current-password">
+        </div>
+        <div class="text-right">
+            <input type="hidden" name="method" value="put">
+            <input type="hidden" name="id" value={{.UserID}}>
+            <button type="submit" class="btn btn-primary btn-primary m-3">Update</button>
+        </div>
+    </form>
+</div>
+<br>
+<div class="container p-2 bg-light">
+    <div class="d-flex flex-row">
+        <p class="mx-auto">Delete this user data.</p>
+        <form action="edit" method="post">
+            <input type="hidden" name="method" value="delete">
+            <input type="hidden" name="id" value={{.UserID}}>
+            <button type="submit" class="btn btn-primary btn-danger ">DELETE</button>
+        </form>
+    </div>
+</div>
+
+{{template "footer" .}}

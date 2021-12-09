@@ -43,3 +43,9 @@ func DeleteUser(id int) (bool, error) {
 	return DeleteUserRecord(id)
 	// error handling
 }
+
+func UpdateUser(id int, name string, rawPassword string) (bool, error) {
+	pw := generatePassword(rawPassword)
+	UpdateUserRecord(id, name, pw)
+	return true, nil
+}

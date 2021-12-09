@@ -85,3 +85,18 @@ func DeleteUserRecord(id int) (bool, error) {
 	db.Where("id = ?", user.ID).Delete(&User{})
 	return true, nil
 }
+
+func UpdateUserRecord(id int, name string, encryptedPassword []byte) (bool, error) {
+	db, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
+	if err != nil {
+		fmt.Println(err)
+		return false, errors.New("DB can not open")
+	}
+	user, err := FindUserById(id)
+	if err != nil {
+		fmt.Println(err)
+		return false, errors.New("User ID not found: " + strconv.Itoa(id))
+	}
+	db.Model(&user).Omit("name").Updates(map[string]interface{}{"name": name, "password": encryptedPassword})
+	return true, nil
+}

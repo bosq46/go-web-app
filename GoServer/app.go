@@ -210,10 +210,15 @@ func UserEdit(w http.ResponseWriter, r *http.Request) {
 			res, _ := domain.DeleteUser(userIdInt)
 			fmt.Println("res", res)
 		} else if method == "put" {
-			targetID := r.PostFormValue("id")
+			targetStrID := r.PostFormValue("id")
+			targetID, targetIDErr := strconv.Atoi(targetStrID)
+			if targetIDErr != nil {
+				fmt.Println("Invalid user ID")
+			}
 			targetName := r.PostFormValue("name")
 			targetPassword := r.PostFormValue("password")
-			fmt.Printf("Update -> %s / %s / %s\n", targetID, targetName, targetPassword)
+			fmt.Printf("Update -> %d / %s / %s\n", targetID, targetName, targetPassword)
+			domain.UpdateUser(targetID, targetName, targetPassword)
 		}
 		http.Redirect(w, r, "/", http.StatusFound)
 	}

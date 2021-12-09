@@ -2,7 +2,7 @@
 {{template "header" .}}
 
 <div class="list-group">
-{{ range $index, $element := .UserNames}}
+{{ range $index, $element := .UserInfo}}
 <a href="edit?user={{$index}}" class="list-group-item list-group-item-action">{{$index}}: {{$element}}</a>
 {{ end }}
 </div>

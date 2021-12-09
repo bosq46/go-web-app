@@ -23,14 +23,12 @@
 </div>
 <br>
 <div class="container p-2 bg-light">
-    <div class="d-flex flex-row">
-        <p class="mx-auto">Delete this user data.</p>
-        <form action="edit" method="post">
-            <input type="hidden" name="method" value="delete">
-            <input type="hidden" name="id" value={{.UserID}}>
-            <button type="submit" class="btn btn-primary btn-danger ">DELETE</button>
-        </form>
-    </div>
+    <form action="edit" method="post">
+        <label for="delete">Delete this user data.</label>
+        <input type="hidden" name="method" value="delete">
+        <input type="hidden" name="id" value={{.UserID}}>
+        <button type="submit" class="btn btn-primary btn-danger ">DELETE</button>
+    </form>
 </div>
 
 {{template "footer" .}}

@@ -164,23 +164,22 @@ func UserList(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "login", http.StatusFound)
 	}
 
-	var userNames []string
-	userList := domain.ListUser()
-	for _, user := range userList {
-		userNames = append(userNames, user.Name)
+	UserInfo := make(map[uint]string)
+	for _, user := range domain.ListUser() {
+		fmt.Printf("user info -> %d : %s\n", user.ID, user.Name)
+		UserInfo[user.ID] = user.Name
 	}
 	item := struct {
-		Title     string
-		UserNames []string
+		Title    string
+		UserInfo map[uint]string
 	}{
-		Title:     "ホーム画面",
-		UserNames: userNames,
+		Title:    "ホーム画面",
+		UserInfo: UserInfo,
 	}
 	err = template.Execute(w, item)
 	if err != nil {
 		fmt.Println(err)
 	}
-
 }
 
 func UserEdit(w http.ResponseWriter, r *http.Request) {
@@ -205,8 +204,11 @@ func UserEdit(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		method := r.PostFormValue("method")
 		if method == "delete" {
-			targetID := r.PostFormValue("id")
-			fmt.Println("Delete ->" + targetID)
+			userId := r.PostFormValue("id")
+			fmt.Println("Delete ->" + userId)
+			userIdInt, _ := strconv.Atoi(userId)
+			res, _ := domain.DeleteUser(userIdInt)
+			fmt.Println("res", res)
 		} else if method == "put" {
 			targetID := r.PostFormValue("id")
 			targetName := r.PostFormValue("name")

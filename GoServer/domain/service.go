@@ -38,3 +38,8 @@ func generatePassword(pass string) []byte {
 	}
 	return hash
 }
+
+func DeleteUser(id int) (bool, error) {
+	return DeleteUserRecord(id)
+	// error handling
+}

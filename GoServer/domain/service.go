@@ -18,8 +18,7 @@ func LoginUser(name string, pass string) bool {
 }
 
 func RegisterUser(name, password string) (bool, error) {
-	user, err := FindUser(name)
-	fmt.Println("Registered = name:" + user.Name + " pass: " + string(user.Password))
+	_, err := FindUser(name)
 
 	// TODO: Validation
 	// nil はすでに登録済みを表すのでエラーを返す
@@ -41,7 +40,7 @@ func generatePassword(pass string) []byte {
 
 func DeleteUser(id int) (bool, error) {
 	return DeleteUserRecord(id)
-	// error handling
+	// TODO: error handling
 }
 
 func UpdateUser(id int, name string, rawPassword string) (bool, error) {

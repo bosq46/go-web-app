@@ -79,9 +79,6 @@ func DeleteUserRecord(id int) (bool, error) {
 		fmt.Println(err)
 		return false, errors.New("User ID not found: " + strconv.Itoa(id))
 	}
-	// strID := strconv.Itoa(id)
-	// fmt.Println(id)
-	// fmt.Println(strID)
 	db.Where("id = ?", user.ID).Delete(&User{})
 	return true, nil
 }

@@ -63,11 +63,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		password := r.PostFormValue("password")
 		// TODO: 毒抜き
 
-		// save DB
 		result, err := domain.RegisterUser(name, password)
-		fmt.Printf("result %s\n", strconv.FormatBool(result))
-		fmt.Printf("err %s\n", err)
-		// save DB
 		if result && err == nil {
 			setLogin(r, w, true, name)
 			http.Redirect(w, r, "home", http.StatusFound)
@@ -114,6 +110,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		name := r.PostFormValue("name")
 		password := r.PostFormValue("password")
+
 		// TODO: 毒抜き
 		//reflect.ValueOf(user).IsNil()
 		if domain.LoginUser(name, password) {
@@ -166,7 +163,7 @@ func UserList(w http.ResponseWriter, r *http.Request) {
 
 	UserInfo := make(map[uint]string)
 	for _, user := range domain.ListUser() {
-		fmt.Printf("user info -> %d : %s\n", user.ID, user.Name)
+		// fmt.Printf("user info -> %d : %s\n", user.ID, user.Name)
 		UserInfo[user.ID] = user.Name
 	}
 	item := struct {
@@ -200,15 +197,13 @@ func UserEdit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 編集の受付
-	fmt.Println(r.Method)
 	if r.Method == "POST" {
 		method := r.PostFormValue("method")
 		if method == "delete" {
 			userId := r.PostFormValue("id")
 			fmt.Println("Delete ->" + userId)
 			userIdInt, _ := strconv.Atoi(userId)
-			res, _ := domain.DeleteUser(userIdInt)
-			fmt.Println("res", res)
+			domain.DeleteUser(userIdInt)
 		} else if method == "put" {
 			targetStrID := r.PostFormValue("id")
 			targetID, targetIDErr := strconv.Atoi(targetStrID)
@@ -224,8 +219,6 @@ func UserEdit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := r.FormValue("user")
-	fmt.Println("userId" + userID)
-
 	item := struct {
 		Title  string
 		UserID string

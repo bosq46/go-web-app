@@ -2,5 +2,10 @@
 	"go.toolsEnvVars": {
 		"GOFLAGS": "-tags=test"
 	},
-	"go.formatTool": "gofmt"
+	"go.formatTool": "gofmt",
+	"go.lintOnSave": "workspace",
+	"go.lintTool": "golangci-lint",
+	"go.lintFlags": [
+		"--fast"
+	]
 }

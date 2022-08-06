@@ -233,6 +233,10 @@ func UserEdit(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// session 初期設定
+	cs.Options.HttpOnly = true
+	// cs.Options.Secure = true
+
 	domain.Migrate()
 	// Test Page
 	http.HandleFunc("/test/params", ShowParams)

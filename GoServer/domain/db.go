@@ -54,6 +54,20 @@ func FindUser(name string) (User, error) {
 	return user, nil
 }
 
+func FindUserOnUnscoped(name string) (User, error) {
+	db, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var user User
+	err = db.Unscoped().Where("name = ?", name).First(&user).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return user, err
+	}
+	return user, nil
+}
+
 func FindUserById(id int) (User, error) {
 	db, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
 	if err != nil {

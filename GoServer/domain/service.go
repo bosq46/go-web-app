@@ -18,7 +18,7 @@ func LoginUser(name string, pass string) bool {
 }
 
 func RegisterUser(name, password string) (bool, error) {
-	_, err := FindUser(name)
+	_, err := FindUserOnUnscoped(name)
 
 	// TODO: Validation
 	// nil はすでに登録済みを表すのでエラーを返す

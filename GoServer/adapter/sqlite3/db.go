@@ -1,15 +1,23 @@
-package domain
+package sqlite3
 
 import (
 	"errors"
 	"fmt"
 	"strconv"
 
+	"go-web-app/adapter/utils"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 var dbName = "data.sqlite3"
+
+type User struct {
+	gorm.Model
+	Name           string `gorm:"unique;not null"`
+	HashedPassword []byte `gorm:"not null"`
+}
 
 func Migrate() {
 	db, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
@@ -26,7 +34,8 @@ func CreateUser(name string, password string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	db.Create(&User{Name: name, Password: generatePassword(password)})
+	hashedPass := utils.GeneratePassword(password)
+	db.Create(&User{Name: name, HashedPassword: hashedPass})
 }
 
 func ListUser() []User {

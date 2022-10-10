@@ -7,7 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"forest.work/m/domain"
+	"go-web-app/adapter/controller"
+	"go-web-app/adapter/sqlite3"
 
 	"github.com/gorilla/sessions"
 	_ "gorm.io/driver/sqlite"
@@ -61,9 +62,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		name := r.PostFormValue("name")
 		password := r.PostFormValue("password")
-		// TODO: 毒抜き
 
-		result, err := domain.RegisterUser(name, password)
+		result, err := controller.PostUsers(name, password)
 		if result && err == nil {
 			setLogin(r, w, true, name)
 			http.Redirect(w, r, "home", http.StatusFound)
@@ -111,9 +111,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		name := r.PostFormValue("name")
 		password := r.PostFormValue("password")
 
-		// TODO: 毒抜き
-		//reflect.ValueOf(user).IsNil()
-		if domain.LoginUser(name, password) {
+		controller.PostUsers(name, password)
+		if controller.LoginUser(name, password) {
 			fmt.Println("login success.")
 			setLogin(r, w, true, name)
 			http.Redirect(w, r, "home", http.StatusFound)
@@ -162,7 +161,7 @@ func UserList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	UserInfo := make(map[uint]string)
-	for _, user := range domain.ListUser() {
+	for _, user := range sqlite3.ListUser() {
 		// fmt.Printf("user info -> %d : %s\n", user.ID, user.Name)
 		UserInfo[user.ID] = user.Name
 	}
@@ -203,7 +202,7 @@ func UserEdit(w http.ResponseWriter, r *http.Request) {
 			userId := r.PostFormValue("id")
 			fmt.Println("Delete ->" + userId)
 			userIdInt, _ := strconv.Atoi(userId)
-			domain.DeleteUser(userIdInt)
+			sqlite3.DeleteUserRecord(userIdInt)
 		} else if method == "put" {
 			targetStrID := r.PostFormValue("id")
 			targetID, targetIDErr := strconv.Atoi(targetStrID)
@@ -213,7 +212,8 @@ func UserEdit(w http.ResponseWriter, r *http.Request) {
 			targetName := r.PostFormValue("name")
 			targetPassword := r.PostFormValue("password")
 			fmt.Printf("Update -> %d / %s / %s\n", targetID, targetName, targetPassword)
-			domain.UpdateUser(targetID, targetName, targetPassword)
+
+			controller.UpdateUser(targetID, targetName, targetPassword)
 		}
 		http.Redirect(w, r, "/", http.StatusFound)
 	}
@@ -237,7 +237,7 @@ func main() {
 	cs.Options.HttpOnly = true
 	// cs.Options.Secure = true
 
-	domain.Migrate()
+	sqlite3.Migrate()
 	// Test Page
 	http.HandleFunc("/test/params", ShowParams)
 	http.HandleFunc("/test/hello", Hello)

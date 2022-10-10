@@ -21,10 +21,9 @@ func noTemplate() *template.Template {
 	return tmp
 }
 
-func PostUsers(name, password string) (bool, error) {
+func postUsers(name, password string) (bool, error) {
 	_, err := sqlite3.FindUserOnUnscoped(name)
 
-	// TODO: Validation
 	// nil はすでに登録済みを表すのでエラーを返す
 	if err == nil {
 		return false, errors.New("the name is already registered")
@@ -48,8 +47,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		name := r.PostFormValue("name")
 		password := r.PostFormValue("password")
+		// TODO: Validation
 
-		result, err := PostUsers(name, password)
+		result, err := postUsers(name, password)
 		if result && err == nil {
 			utils.SetLogin(r, w, true, name)
 			http.Redirect(w, r, "home", http.StatusFound)
@@ -78,9 +78,6 @@ func LoginUser(name string, pass string) bool {
 	if err != nil {
 		return false
 	}
-	fmt.Println(user.HashedPassword)
-	fmt.Println(pass)
-	fmt.Printf("%T", user.HashedPassword)
 	err = bcrypt.CompareHashAndPassword(user.HashedPassword, []byte(pass))
 	fmt.Println(err)
 	return err == nil
@@ -116,7 +113,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		name := r.PostFormValue("name")
 		password := r.PostFormValue("password")
 
-		PostUsers(name, password)
+		postUsers(name, password)
 		if LoginUser(name, password) {
 			fmt.Println("login success.")
 			utils.SetLogin(r, w, true, name)

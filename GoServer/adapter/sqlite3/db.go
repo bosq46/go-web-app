@@ -117,6 +117,10 @@ func UpdateUserRecord(id int, name string, encryptedPassword []byte) (bool, erro
 		fmt.Println(err)
 		return false, errors.New("User ID not found: " + strconv.Itoa(id))
 	}
-	db.Model(&user).Omit("id").Updates(map[string]interface{}{"name": name, "password": encryptedPassword})
+	// db.Model(&user).Omit("id").Updates(map[string]interface{}{"name": name, "hashedPassword": encryptedPassword})
+	db.Model(&user).Updates(User{
+		Name:           name,
+		HashedPassword: encryptedPassword,
+	})
 	return true, nil
 }

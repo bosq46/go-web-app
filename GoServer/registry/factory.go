@@ -15,12 +15,14 @@ type Factory struct {
 func ClearFactory() {
 	FactorySingleton = nil
 }
+
 func GetFactory() *Factory {
 	if FactorySingleton == nil {
 		FactorySingleton = &Factory{}
 	}
 	return FactorySingleton
 }
+
 func (f *Factory) container(key string, builder func() interface{}) interface{} {
 	if f.cache == nil {
 		f.cache = map[string]interface{}{}

@@ -17,6 +17,7 @@ func NewCreateUser(repos domain.UserRepository) *UserCreator {
 		UserRepository: repos,
 	}
 }
+
 func (u *UserCreator) Execute(req *usecase.CreateUserRequest) (*usecase.CreateUserResponse, error) {
 	user, err := u.UserRepository.CreateUser(req.ToUserModel())
 	if err != nil {
